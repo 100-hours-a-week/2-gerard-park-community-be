@@ -1,7 +1,8 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
-import router from './routes/userRoutes.js'
+import userRouter from './routes/userRoutes.js'
+import postRouter from './routes/postRoutes.js'
 
 dotenv.config()
 
@@ -21,7 +22,8 @@ app.use(
   }),
 )
 
-app.use('/', router);
+app.use('/auth', userRouter);
+app.use('/board'. postRouter);
 
 app.use((err, req, res, next) => {
   console.error(err.stack)
