@@ -72,7 +72,7 @@ export const createPost = async (req, res) => {
                 userId,
                 title,
                 content,
-                image: req.file ? `/uploads/${req.file.filename}` : null,
+                image: req.file ? `http://localhost:3000/uploads/${req.file.filename}` : null, // 경로는 나중에 바꿔줘야함
                 likes: 0,
                 views: 0,
                 comments: 0
