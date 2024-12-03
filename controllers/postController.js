@@ -1,5 +1,6 @@
 import PostModel from '../models/postModel.js';
 import UserModel from '../models/userModel.js';
+import ReplyModel from '../models/replyModel.js';
 import multer from 'multer';
 import path from 'path';
 
@@ -174,6 +175,7 @@ export const deletePost = async (req, res) => {
             return res.status(403).json({ message: '게시글을 삭제할 권한이 없습니다.' });
         }
 
+        await ReplyModel.deletePostReply(postId);
         await PostModel.deletePost(postId);
         res.json({ message: '게시글이 삭제되었습니다.' });
     } catch (error) {
@@ -209,117 +211,3 @@ export const likePost = async (req, res) => {
         res.status(500).json({ message: '좋아요 처리에 실패했습니다.', error: error.message });
     }
 };
-
-/* // 게시글 검색
-export const searchPosts = async (req, res) => {
-    try {
-        const { keyword, type } = req.query;
-        if (!keyword) {
-            return res.status(400).json({ message: '검색어를 입력해주세요.' });
-        }
-
-        const posts = await PostModel.getAllPosts();
-        let filteredPosts;
-
-        switch(type) {
-            case 'title':
-                filteredPosts = posts.filter(post => 
-                    post.title.toLowerCase().includes(keyword.toLowerCase())
-                );
-                break;
-            case 'content':
-                filteredPosts = posts.filter(post => 
-                    post.content.toLowerCase().includes(keyword.toLowerCase())
-                );
-                break;
-            case 'author':
-                const users = await Promise.all(posts.map(post => UserModel.findById(post.userId)));
-                filteredPosts = posts.filter((post, index) => 
-                    users[index] && users[index].username.toLowerCase().includes(keyword.toLowerCase())
-                );
-                break;
-            case 'all':
-            default:
-                const allUsers = await Promise.all(posts.map(post => UserModel.findById(post.userId)));
-                filteredPosts = posts.filter((post, index) => 
-                    post.title.toLowerCase().includes(keyword.toLowerCase()) ||
-                    post.content.toLowerCase().includes(keyword.toLowerCase()) ||
-                    (allUsers[index] && allUsers[index].username.toLowerCase().includes(keyword.toLowerCase()))
-                );
-        }
-
-        // 사용자 정보 추가
-        const postsWithUserInfo = await Promise.all(filteredPosts.map(async (post) => {
-            const user = await UserModel.findById(post.userId);
-            const isLiked = post.likedBy && post.likedBy.includes(req.session.userId);
-            return {
-                ...post,
-                username: user ? user.username : 'Unknown User',
-                profileImage: user ? user.profileImage : null,
-                isLiked
-            };
-        }));
-
-        res.json(postsWithUserInfo);
-    } catch (error) {
-        res.status(500).json({ message: '게시글 검색에 실패했습니다.', error: error.message });
-    }
-};
-
-// 내가 작성한 게시글 목록
-export const getMyPosts = async (req, res) => {
-    try {
-        const userId = req.session.userId;
-        if (!userId) {
-            return res.status(401).json({ message: '로그인이 필요합니다.' });
-        }
-
-        const allPosts = await PostModel.getAllPosts();
-        const myPosts = allPosts.filter(post => post.userId === userId);
-
-        // 사용자 정보 추가
-        const postsWithUserInfo = await Promise.all(myPosts.map(async (post) => {
-            const user = await UserModel.findById(userId);
-            return {
-                ...post,
-                username: user ? user.username : 'Unknown User',
-                profileImage: user ? user.profileImage : null,
-                isLiked: post.likedBy && post.likedBy.includes(userId)
-            };
-        }));
-
-        res.json(postsWithUserInfo);
-    } catch (error) {
-        res.status(500).json({ message: '내 게시글 목록을 불러오는데 실패했습니다.', error: error.message });
-    }
-};
-
-// 내가 좋아요한 게시글 목록
-export const getLikedPosts = async (req, res) => {
-    try {
-        const userId = req.session.userId;
-        if (!userId) {
-            return res.status(401).json({ message: '로그인이 필요합니다.' });
-        }
-
-        const allPosts = await PostModel.getAllPosts();
-        const likedPosts = allPosts.filter(post => 
-            post.likedBy && post.likedBy.includes(userId)
-        );
-
-        // 사용자 정보 추가
-        const postsWithUserInfo = await Promise.all(likedPosts.map(async (post) => {
-            const user = await UserModel.findById(post.userId);
-            return {
-                ...post,
-                username: user ? user.username : 'Unknown User',
-                profileImage: user ? user.profileImage : null,
-                isLiked: true
-            };
-        }));
-
-        res.json(postsWithUserInfo);
-    } catch (error) {
-        res.status(500).json({ message: '좋아요한 게시글 목록을 불러오는데 실패했습니다.', error: error.message });
-    }
-}; */

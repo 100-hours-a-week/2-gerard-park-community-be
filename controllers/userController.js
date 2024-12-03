@@ -1,4 +1,6 @@
 import UserModel from '../models/userModel.js';
+import PostModel from '../models/postModel.js';
+import ReplyModel from '../models/replyModel.js';
 import bcrypt from 'bcrypt';
 import multer from 'multer';
 import path from 'path';
@@ -190,7 +192,22 @@ export const deleteUser = async (req, res) => {
         if (!userId) {
             return res.status(401).json({ message: '인증되지 않은 사용자입니다.' })
         }
+        
+        const postIndex = await PostModel.deleteUserPost(userId);
+        for (let index of postIndex) {
+            await ReplyModel.deletePostReply(index.id);
+        }
+        await ReplyModel.deleteUserReply(userId);
+        const posts = await PostModel.getAllPosts();
+        
+        for (let pr of posts) {
+            const a = await ReplyModel.findByPostId(pr.id);
+            pr.replies = a.length;
+            console.log(pr.replies)
+        }
+        await PostModel.savePosts(posts);
         await UserModel.deleteUser(userId)
+
         req.session.destroy((err) => {
             if (err) {
                 return res.status(500).json({ message: '세션 삭제 중 오류가 발생했습니다.' })

@@ -16,8 +16,13 @@ export default class UserModel {
 
     static async createUser(userData) {
         const users = await this.getAllUsers();
+        let lastId = 0;
+        if (users.length != 0) {
+            const index = users.length - 1;
+            lastId = users[index].id;
+        }
         const newUser = {
-            id: users.length + 1,
+            id: lastId + 1,
             profileImage: null, // 기본값 설정
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -37,8 +42,8 @@ export default class UserModel {
         // 기존 프로필 이미지 경로 저장
         const oldProfileImage = users[userIndex].profileImage;
 
-        users[userIndex] = { 
-            ...users[userIndex], 
+        users[userIndex] = {
+            ...users[userIndex],
             ...userData,
             updatedAt: new Date().toISOString()
         };
@@ -59,7 +64,7 @@ export default class UserModel {
     static async deleteUser(userId) {
         const users = await this.getAllUsers();
         const user = users.find(user => user.id === userId);
-        
+
         if (!user) {
             throw new Error('사용자를 찾을 수 없습니다.');
         }

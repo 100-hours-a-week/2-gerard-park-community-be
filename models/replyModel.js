@@ -28,8 +28,13 @@ export default class ReplyModel {
 
     static async createReply(replyData) {
         const replies = await this.getAllReplies();
+        let lastId = 0;
+        if (replies.length != 0) {
+            const index = replies.length - 1;
+            lastId = replies[index].id;
+        }
         const newReply = {
-            id: replies.length + 1,
+            id: lastId + 1,
             createdAt: new Date().toISOString(),
             ...replyData
         };
@@ -55,6 +60,26 @@ export default class ReplyModel {
         if (replies.length === updatedReplies.length) {
             throw new Error('댓글을 찾을 수 없습니다.');
         }
+        await this.saveReplies(updatedReplies);
+    }
+
+    // 게시글 삭제시 게시글에 달린 댓글 삭제
+    static async deletePostReply(postId) {
+        const replies = await this.getAllReplies();
+        const updatedReplies = replies.filter(reply => reply.postId !== postId);
+        /* if (replies.length === updatedReplies.length) {
+            throw new Error('댓글을 찾을 수 없습니다.');
+        } */
+        await this.saveReplies(updatedReplies);
+    }
+
+    // 회원 삭제시 그 회원이 작성한 댓글 삭제
+    static async deleteUserReply(userId) {
+        const replies = await this.getAllReplies();
+        const updatedReplies = replies.filter(reply => reply.userId !== userId);
+        /* if (replies.length === updatedReplies.length) {
+            throw new Error('댓글을 찾을 수 없습니다.');
+        } */
         await this.saveReplies(updatedReplies);
     }
 
