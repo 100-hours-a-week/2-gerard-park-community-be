@@ -1,10 +1,16 @@
 import ReplyModel from '../models/replyModel.js';
 import PostModel from '../models/postModel.js';
+import UserModel from '../models/userModel.js';
 
 export const getReplies = async (req, res) => {
     try {
         const postId = parseInt(req.params.postId);
         const replies = await ReplyModel.findByPostId(postId);
+        for (let reply of replies) {
+            const user = await UserModel.findById(reply.userId);
+            reply.username =  user.username;
+            reply.profileImage = user.profileImage;
+        };
         res.json(replies);
     } catch (error) {
         res.status(500).json({ message: '댓글 목록을 불러오는데 실패했습니다.', error: error.message });
@@ -14,7 +20,9 @@ export const getReplies = async (req, res) => {
 export const createReply = async (req, res) => {
     try {
         const postId = parseInt(req.params.postId);
-        const userId = req.session.userId;
+        //const userId = req.session.userId;
+        const obj = JSON.parse(req.rawHeaders[13]);
+        const userId = obj.sessionId;
         const { content } = req.body;
 
         if (!userId) {
@@ -31,14 +39,18 @@ export const createReply = async (req, res) => {
             return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
         }
 
+        const user = await UserModel.findById(post.userId);
+
         const newReply = await ReplyModel.createReply({
             postId,
-            userId,
+            userId,/* 
+            profileImage: user ? user.profileImage : null,
+            username: user ? user.username : 'Unknown User', */
             content
         });
 
         // 게시글의 댓글 수 증가
-        post.comments += 1;
+        post.replies += 1;
         await PostModel.updatePost(postId, post);
 
         res.status(201).json(newReply);
@@ -50,7 +62,9 @@ export const createReply = async (req, res) => {
 export const updateReply = async (req, res) => {
     try {
         const replyId = parseInt(req.params.id);
-        const userId = req.session.userId;
+        //const userId = req.session.userId;
+        const obj = JSON.parse(req.rawHeaders[13]);
+        const userId = obj.sessionId;
         const { content } = req.body;
 
         const reply = await ReplyModel.findById(replyId);
@@ -77,7 +91,9 @@ export const updateReply = async (req, res) => {
 export const deleteReply = async (req, res) => {
     try {
         const replyId = parseInt(req.params.id);
-        const userId = req.session.userId;
+        //const userId = req.session.userId;
+        const obj = JSON.parse(req.rawHeaders[13]);
+        const userId = obj.sessionId;
 
         const reply = await ReplyModel.findById(replyId);
         if (!reply) {
@@ -93,7 +109,7 @@ export const deleteReply = async (req, res) => {
         // 게시글의 댓글 수 감소
         const post = await PostModel.findById(reply.postId);
         if (post) {
-            post.comments -= 1;
+            post.replies -= 1;
             await PostModel.updatePost(reply.postId, post);
         }
 

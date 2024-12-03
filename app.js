@@ -57,7 +57,6 @@ app.use(session({
 }))
 // 정적 파일 제공
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use('/auth', authRouter);
 app.use('/users', userRouter);

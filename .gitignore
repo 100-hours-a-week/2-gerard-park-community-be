@@ -3,6 +3,7 @@
 
 data/
 tmp/
+uploads/
 
 ### Node ###
 # Logs

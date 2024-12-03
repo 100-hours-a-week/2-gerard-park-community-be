@@ -39,7 +39,23 @@ export default class PostModel {
         if (postIndex === -1) {
             throw new Error('게시글을 찾을 수 없습니다.');
         }
-        posts[postIndex] = { ...posts[postIndex], ...postData };
+        const oldImage = posts[postIndex].image;
+
+        posts[postIndex] = {
+            ...posts[postIndex],
+            ...postData,
+            updatedAt: new Date().toISOString()
+        };
+
+        // 이미지가 변경되었고 이전 이미지가 있다면 삭제
+        if (postData.image && oldImage && oldImage !== postData.image) {
+            try {
+                const imagePath = oldImage.replace('http://localhost:3000/', '');
+                await fs.unlink(path.join(process.cwd(), imagePath));
+            } catch (error) {
+                console.error('이전 프로필 이미지 삭제 실패:', error);
+            }
+        }
         await this.savePosts(posts);
         return posts[postIndex];
     }

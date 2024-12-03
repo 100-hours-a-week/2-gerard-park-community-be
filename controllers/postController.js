@@ -75,7 +75,7 @@ export const createPost = async (req, res) => {
                 image: req.file ? `http://localhost:3000/uploads/${req.file.filename}` : null, // 경로는 나중에 바꿔줘야함
                 likes: 0,
                 views: 0,
-                comments: 0
+                replies: 0
             });
 
             res.status(201).json(newPost);
@@ -139,15 +139,18 @@ export const updatePost = async (req, res) => {
                 return res.status(403).json({ message: '게시글을 수정할 권한이 없습니다.' });
             }
 
-            const updatedPost = await PostModel.updatePost(postId, {
-                ...post,
+            const updateData = {
                 title,
                 content,
-                image: req.file ? `/uploads/${req.file.filename}` : post.image,
-                updatedAt: new Date().toISOString()
-            });
+            };
 
-            res.json(updatedPost);
+            if(req.file) {
+                updateData.image = `http://localhost:3000/uploads/${req.file.filename}`;
+            }
+
+            const updatedPost = await PostModel.updatePost(postId, updateData);
+
+            res.json({ message: '회원정보가 업데이트되었습니다.', updatedPost});
         } catch (error) {
             res.status(500).json({ message: '게시글 수정에 실패했습니다.', error: error.message });
         }
