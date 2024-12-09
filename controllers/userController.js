@@ -81,7 +81,6 @@ export const login = async (req, res) => {
         // 세션에 사용자 정보 저장
         req.session.userId = user.id;
         req.session.email = user.email;
-
         /* const sessionId = `${user.id}-${Date.now()}`;
         await UserModel.updateUserSessionId(user.id, sessionId); */
         req.session.save(err => {
@@ -105,8 +104,7 @@ export const logout = (req, res) => {
 
 export const getUserInfo = async (req, res) => {
     try {
-        const obj = JSON.parse(req.rawHeaders[13]);
-        const userId = obj.sessionId;
+        const userId = req.session.userId;
         if (!userId) {
             return res.status(401).json({ message: '인증되지 않은 사용자입니다.' });
         }
@@ -129,8 +127,7 @@ export const updateUserInfo = async (req, res) => {
 
         try {
             const { email, username } = req.body;
-            const obj = JSON.parse(req.rawHeaders[13]);
-            const userId = obj.sessionId;
+            const userId = req.session.userId;
 
             if (!userId) {
                 return res.status(401).json({ message: '인증되지 않은 사용자입니다.' });
@@ -163,8 +160,7 @@ export const updateUserInfo = async (req, res) => {
 export const updatePassword = async (req, res) => {
     try {
         const { password } = req.body;
-        const obj = JSON.parse(req.rawHeaders[13]);
-        const userId = obj.sessionId;
+        const userId = req.session.userId;
 
         if (!userId) {
             return res.status(401).json({ message: '인증되지 않은 사용자입니다.' });
@@ -187,8 +183,7 @@ export const updatePassword = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
     try {
-        const obj = JSON.parse(req.rawHeaders[13]);
-        const userId = obj.sessionId;
+        const userId = req.session.userId;
         if (!userId) {
             return res.status(401).json({ message: '인증되지 않은 사용자입니다.' })
         }

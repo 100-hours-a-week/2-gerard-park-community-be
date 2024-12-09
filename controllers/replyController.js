@@ -20,9 +20,7 @@ export const getReplies = async (req, res) => {
 export const createReply = async (req, res) => {
     try {
         const postId = parseInt(req.params.postId);
-        //const userId = req.session.userId;
-        const obj = JSON.parse(req.rawHeaders[13]);
-        const userId = obj.sessionId;
+        const userId = req.session.userId;
         const { content } = req.body;
 
         if (!userId) {
@@ -62,9 +60,7 @@ export const createReply = async (req, res) => {
 export const updateReply = async (req, res) => {
     try {
         const replyId = parseInt(req.params.id);
-        //const userId = req.session.userId;
-        const obj = JSON.parse(req.rawHeaders[13]);
-        const userId = obj.sessionId;
+        const userId = req.session.userId;
         const { content } = req.body;
 
         const reply = await ReplyModel.findById(replyId);
@@ -91,9 +87,7 @@ export const updateReply = async (req, res) => {
 export const deleteReply = async (req, res) => {
     try {
         const replyId = parseInt(req.params.id);
-        //const userId = req.session.userId;
-        const obj = JSON.parse(req.rawHeaders[13]);
-        const userId = obj.sessionId;
+        const userId = req.session.userId;
 
         const reply = await ReplyModel.findById(replyId);
         if (!reply) {

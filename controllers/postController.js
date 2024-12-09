@@ -57,9 +57,7 @@ export const createPost = async (req, res) => {
 
         try {
             const { title, content } = req.body;
-            //const userId = req.session.userId;
-            const obj = JSON.parse(req.rawHeaders[13]);
-            const userId = obj.sessionId;
+            const userId = req.session.userId;
 
             if (!userId) {
                 return res.status(401).json({ message: '로그인이 필요합니다.' });
@@ -89,10 +87,8 @@ export const createPost = async (req, res) => {
 export const getPost = async (req, res) => {
     try {
         const postId = parseInt(req.params.id);
-        //const userId = req.session.userId;
-        const obj = JSON.parse(req.rawHeaders[13]);
-        const userId = obj.sessionId;
-
+        const userId = req.session.userId;
+        console.log(req.session.userId);
         const post = await PostModel.findById(postId);
 
         if (!post) {
@@ -126,9 +122,7 @@ export const updatePost = async (req, res) => {
         try {
             const postId = parseInt(req.params.id);
             const { title, content } = req.body;
-            //const userId = req.session.userId;
-            const obj = JSON.parse(req.rawHeaders[13]);
-            const userId = obj.sessionId;
+            const userId = req.session.userId;
 
             const post = await PostModel.findById(postId);
 
@@ -161,9 +155,7 @@ export const updatePost = async (req, res) => {
 export const deletePost = async (req, res) => {
     try {
         const postId = parseInt(req.params.id);
-        //const userId = req.session.userId;
-        const obj = JSON.parse(req.rawHeaders[13]);
-        const userId = obj.sessionId;
+        const userId = req.session.userId;
 
         const post = await PostModel.findById(postId);
 
@@ -186,9 +178,7 @@ export const deletePost = async (req, res) => {
 export const likePost = async (req, res) => {
     try {
         const postId = parseInt(req.params.id);
-        //const userId = req.session.userId;
-        const obj = JSON.parse(req.rawHeaders[13]);
-        const userId = obj.sessionId;
+        const userId = req.session.userId;
 
         if (!userId) {
             return res.status(401).json({ message: '로그인이 필요합니다.' });
