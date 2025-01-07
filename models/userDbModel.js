@@ -1,5 +1,6 @@
 import {promises as fileSystem} from 'fs';
 const filePath = '../data/users.json';
+import conn from '../db.js';
 
 class UserDbModel {
     static #getUserInfo(data, email) {

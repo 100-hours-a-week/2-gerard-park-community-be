@@ -74,7 +74,8 @@ export const createPost = async (req, res) => {
                 image: req.file ? `http://localhost:3000/uploads/${req.file.filename}` : null, // 경로는 나중에 바꿔줘야함
                 likes: 0,
                 views: 0,
-                replies: 0
+                replies: 0,
+                likedBy: []
             });
 
             res.status(201).json(newPost);
@@ -88,7 +89,6 @@ export const getPost = async (req, res) => {
     try {
         const postId = parseInt(req.params.id);
         const userId = req.session.userId;
-        console.log(req.session.userId);
         const post = await PostModel.findById(postId);
 
         if (!post) {
@@ -100,13 +100,51 @@ export const getPost = async (req, res) => {
             post.views += 1;
             await PostModel.updatePost(postId, post);
         }
+        const isLiked = post.likedBy.includes(userId);
+        let emoji;
+        if(isLiked) {
+            emoji = '❤️';
+        } else {
+            emoji = '🤍';
+        }
 
         const user = await UserModel.findById(post.userId);
 
         res.json({
             ...post,
             username: user ? user.username : 'Unknown User',
-            profileImage: user ? user.profileImage : null
+            profileImage: user ? user.profileImage : null,
+            emoji
+        });
+    } catch (error) {
+        res.status(500).json({ message: '게시글을 불러오는데 실패했습니다.', error: error.message });
+    }
+};
+
+export const refreshPost = async (req, res) => {
+    try {
+        const postId = parseInt(req.params.id);
+        const userId = req.session.userId;
+        const post = await PostModel.findById(postId);
+
+        if (!post) {
+            return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
+        }
+        const isLiked = post.likedBy.includes(userId);
+        let emoji;
+        if(isLiked) {
+            emoji = '❤️';
+        } else {
+            emoji = '🤍';
+        }
+
+        const user = await UserModel.findById(post.userId);
+
+        res.json({
+            ...post,
+            username: user ? user.username : 'Unknown User',
+            profileImage: user ? user.profileImage : null,
+            emoji
         });
     } catch (error) {
         res.status(500).json({ message: '게시글을 불러오는데 실패했습니다.', error: error.message });
@@ -175,7 +213,7 @@ export const deletePost = async (req, res) => {
     }
 };
 
-export const likePost = async (req, res) => {
+/* export const likePost = async (req, res) => {
     try {
         const postId = parseInt(req.params.id);
         const userId = req.session.userId;
@@ -196,6 +234,47 @@ export const likePost = async (req, res) => {
         res.json({
             message: '좋아요가 추가되었습니다.',
             likes: post.likes
+        });
+    } catch (error) {
+        res.status(500).json({ message: '좋아요 처리에 실패했습니다.', error: error.message });
+    }
+}; */
+
+export const likePost = async (req, res) => {
+    try {
+        const postId = parseInt(req.params.id);
+        const userId = req.session.userId;
+
+        if (!userId) {
+            return res.status(401).json({ message: '로그인이 필요합니다.' });
+        }
+
+        const post = await PostModel.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
+        }
+
+        // likedBy 배열이 없으면 초기화
+        if (!post.likedBy) {
+            post.likedBy = [];
+        }
+
+        const isLiked = post.likedBy.includes(userId);
+        if (isLiked) {
+            // 좋아요 취소
+            post.likes = (post.likes || 1) - 1;
+            post.likedBy = post.likedBy.filter(id => id !== userId);
+        } else {
+            // 좋아요 추가
+            post.likes = (post.likes || 0) + 1;
+            post.likedBy.push(userId);
+        }
+
+        await PostModel.updatePost(postId, post);
+        res.json({ 
+            message: isLiked ? '좋아요가 취소되었습니다.' : '좋아요가 추가되었습니다.',
+            likes: post.likes,
+            isLiked: !isLiked
         });
     } catch (error) {
         res.status(500).json({ message: '좋아요 처리에 실패했습니다.', error: error.message });
