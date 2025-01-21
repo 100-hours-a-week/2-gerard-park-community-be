@@ -1,6 +1,5 @@
-import PostModel from '../models/postModel.js';
-import UserModel from '../models/userModel.js';
-import ReplyModel from '../models/replyModel.js';
+import PostModel from '../models/postDbModel.js';
+import UserModel from '../models/userDbModel.js';
 import multer from 'multer';
 import path from 'path';
 
@@ -36,11 +35,11 @@ export const getPosts = async (req, res) => {
     try {
         const posts = await PostModel.getAllPosts();
         const postsWithUserInfo = await Promise.all(posts.map(async (post) => {
-            const user = await UserModel.findById(post.userId);
+            const user = await UserModel.findById(post.user_id);
             return {
                 ...post,
                 username: user ? user.username : 'Unknown User',
-                profileImage: user ? user.profileImage : null
+                profileImage: user ? user.profile_image : null
             };
         }));
         res.json(postsWithUserInfo);
@@ -72,10 +71,6 @@ export const createPost = async (req, res) => {
                 title,
                 content,
                 image: req.file ? `http://localhost:3000/uploads/${req.file.filename}` : null, // 경로는 나중에 바꿔줘야함
-                likes: 0,
-                views: 0,
-                replies: 0,
-                likedBy: []
             });
 
             res.status(201).json(newPost);
@@ -97,23 +92,19 @@ export const getPost = async (req, res) => {
 
         // 조회수 증가 (같은 사용자가 아닐 경우에만)
         if (post.userId !== userId) {
-            post.views += 1;
-            await PostModel.updatePost(postId, post);
-        }
-        const isLiked = post.likedBy.includes(userId);
-        let emoji;
-        if(isLiked) {
-            emoji = '❤️';
-        } else {
-            emoji = '🤍';
+            post.views = (post.views || 0) + 1;
+            await PostModel.updatePost(postId, { views: post.views });
         }
 
-        const user = await UserModel.findById(post.userId);
+        const isLiked = post.likedBy.includes(userId);
+        const emoji = isLiked ? '❤️' : '🤍';
+
+        const user = await UserModel.findById(post.user_id);
 
         res.json({
             ...post,
             username: user ? user.username : 'Unknown User',
-            profileImage: user ? user.profileImage : null,
+            profileImage: user ? user.profile_image : null,
             emoji
         });
     } catch (error) {
@@ -130,20 +121,16 @@ export const refreshPost = async (req, res) => {
         if (!post) {
             return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
         }
-        const isLiked = post.likedBy.includes(userId);
-        let emoji;
-        if(isLiked) {
-            emoji = '❤️';
-        } else {
-            emoji = '🤍';
-        }
 
-        const user = await UserModel.findById(post.userId);
+        const isLiked = post.likedBy.includes(userId);
+        const emoji = isLiked ? '❤️' : '🤍';
+
+        const user = await UserModel.findById(post.user_id);
 
         res.json({
             ...post,
             username: user ? user.username : 'Unknown User',
-            profileImage: user ? user.profileImage : null,
+            profileImage: user ? user.profile_image : null,
             emoji
         });
     } catch (error) {
@@ -205,40 +192,12 @@ export const deletePost = async (req, res) => {
             return res.status(403).json({ message: '게시글을 삭제할 권한이 없습니다.' });
         }
 
-        await ReplyModel.deletePostReply(postId);
         await PostModel.deletePost(postId);
         res.json({ message: '게시글이 삭제되었습니다.' });
     } catch (error) {
         res.status(500).json({ message: '게시글 삭제에 실패했습니다.', error: error.message });
     }
 };
-
-/* export const likePost = async (req, res) => {
-    try {
-        const postId = parseInt(req.params.id);
-        const userId = req.session.userId;
-
-        if (!userId) {
-            return res.status(401).json({ message: '로그인이 필요합니다.' });
-        }
-
-        const post = await PostModel.findById(postId);
-        if (!post) {
-            return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
-        }
-
-        // 좋아요 수 증가
-        post.likes = (post.likes || 0) + 1;
-        await PostModel.updatePost(postId, post);
-
-        res.json({
-            message: '좋아요가 추가되었습니다.',
-            likes: post.likes
-        });
-    } catch (error) {
-        res.status(500).json({ message: '좋아요 처리에 실패했습니다.', error: error.message });
-    }
-}; */
 
 export const likePost = async (req, res) => {
     try {
@@ -254,27 +213,16 @@ export const likePost = async (req, res) => {
             return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
         }
 
-        // likedBy 배열이 없으면 초기화
-        if (!post.likedBy) {
-            post.likedBy = [];
-        }
-
-        const isLiked = post.likedBy.includes(userId);
-        if (isLiked) {
-            // 좋아요 취소
-            post.likes = (post.likes || 1) - 1;
-            post.likedBy = post.likedBy.filter(id => id !== userId);
-        } else {
-            // 좋아요 추가
-            post.likes = (post.likes || 0) + 1;
-            post.likedBy.push(userId);
-        }
-
-        await PostModel.updatePost(postId, post);
+        // toggleLike 메서드 사용 - 반환값은 좋아요가 추가되었는지(true) 삭제되었는지(false) 나타냄
+        const isLiked = await PostModel.toggleLike(postId, userId);
+        
+        // 업데이트된 게시글 정보를 가져옴
+        const updatedPost = await PostModel.findById(postId);
+        
         res.json({ 
-            message: isLiked ? '좋아요가 취소되었습니다.' : '좋아요가 추가되었습니다.',
-            likes: post.likes,
-            isLiked: !isLiked
+            message: isLiked ? '좋아요가 추가되었습니다.' : '좋아요가 취소되었습니다.',
+            likes: updatedPost.likes,
+            isLiked: isLiked
         });
     } catch (error) {
         res.status(500).json({ message: '좋아요 처리에 실패했습니다.', error: error.message });

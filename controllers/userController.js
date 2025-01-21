@@ -1,6 +1,4 @@
-import UserModel from '../models/userModel.js';
-import PostModel from '../models/postModel.js';
-import ReplyModel from '../models/replyModel.js';
+import UserModel from '../models/userDbModel.js';
 import bcrypt from 'bcrypt';
 import multer from 'multer';
 import path from 'path';
@@ -112,7 +110,7 @@ export const getUserInfo = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
         }
-        res.json({ email: user.email, username: user.username, profileImage: user.profileImage });
+        res.json({ email: user.email, username: user.username, profileImage: user.profile_image });
     } catch (error) {
         res.status(500).json({ message: '서버 오류가 발생했습니다.', error: error.message });
     }
@@ -188,7 +186,7 @@ export const deleteUser = async (req, res) => {
             return res.status(401).json({ message: '인증되지 않은 사용자입니다.' })
         }
         
-        const postIndex = await PostModel.deleteUserPost(userId);
+        /* const postIndex = await PostModel.deleteUserPost(userId);
         for (let index of postIndex) {
             await ReplyModel.deletePostReply(index.id);
         }
@@ -200,7 +198,7 @@ export const deleteUser = async (req, res) => {
             pr.replies = a.length;
             console.log(pr.replies)
         }
-        await PostModel.savePosts(posts);
+        await PostModel.savePosts(posts); */
         await UserModel.deleteUser(userId)
 
         req.session.destroy((err) => {
