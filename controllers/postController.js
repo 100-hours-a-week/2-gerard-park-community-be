@@ -155,7 +155,7 @@ export const updatePost = async (req, res) => {
                 return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
             }
 
-            if (post.userId !== userId) {
+            if (post.user_id !== userId) {
                 return res.status(403).json({ message: '게시글을 수정할 권한이 없습니다.' });
             }
 
@@ -188,7 +188,7 @@ export const deletePost = async (req, res) => {
             return res.status(404).json({ message: '게시글을 찾을 수 없습니다.' });
         }
 
-        if (post.userId !== userId) {
+        if (post.user_id !== userId) {
             return res.status(403).json({ message: '게시글을 삭제할 권한이 없습니다.' });
         }
 
