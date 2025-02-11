@@ -70,7 +70,7 @@ export const createPost = async (req, res) => {
                 userId,
                 title,
                 content,
-                image: req.file ? `http://localhost:3000/uploads/${req.file.filename}` : null, // 경로는 나중에 바꿔줘야함
+                image: req.file ? `/uploads/${req.file.filename}` : null, // 경로는 나중에 바꿔줘야함
             });
 
             res.status(201).json(newPost);
@@ -165,12 +165,12 @@ export const updatePost = async (req, res) => {
             };
 
             if(req.file) {
-                updateData.image = `http://localhost:3000/uploads/${req.file.filename}`;
+                updateData.image = `/uploads/${req.file.filename}`;
             }
 
             const updatedPost = await PostModel.updatePost(postId, updateData);
 
-            res.json({ message: '회원정보가 업데이트되었습니다.', updatedPost});
+            res.json({ message: '게시글을 수정했습니다.', updatedPost});
         } catch (error) {
             res.status(500).json({ message: '게시글 수정에 실패했습니다.', error: error.message });
         }

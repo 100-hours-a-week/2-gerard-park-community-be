@@ -2,6 +2,8 @@ import { conn } from '../db.js';
 import fs from 'fs/promises';
 import path from 'path';
 
+const URL = 'http://3.39.195.183:3000';
+
 class UserModel {
     static async findById(id) {
         try {
@@ -78,7 +80,7 @@ class UserModel {
             if (userData.profileImage && currentUser.profile_image && 
                 currentUser.profile_image !== userData.profileImage) {
                 try {
-                    const imagePath = currentUser.profile_image.replace('http://localhost:3000/', '');
+                    const imagePath = currentUser.profile_image.slice(1);
                     await fs.unlink(path.join(process.cwd(), imagePath));
                 } catch (error) {
                     console.error('이전 프로필 이미지 삭제 실패:', error);
@@ -116,7 +118,7 @@ class UserModel {
             // 프로필 이미지 삭제
             if (user.profile_image) {
                 try {
-                    const imagePath = user.profile_image.replace('http://localhost:3000/', '');
+                    const imagePath = user.profile_image.slice(1);
                     await fs.unlink(path.join(process.cwd(), imagePath));
                 } catch (error) {
                     console.error('프로필 이미지 삭제 실패:', error);

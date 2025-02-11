@@ -94,7 +94,7 @@ export default class PostModel {
                 // 이미지 처리
                 if (postData.image && currentPost.image && currentPost.image !== postData.image) {
                     try {
-                        const imagePath = currentPost.image.replace('http://localhost:3000/', '');
+                        const imagePath = currentPost.image.slice(1);
                         await fs.unlink(path.join(process.cwd(), imagePath));
                     } catch (error) {
                         console.error('이전 이미지 삭제 실패:', error);
@@ -156,7 +156,7 @@ export default class PostModel {
             // 이미지 파일 삭제
             if (post.image) {
                 try {
-                    const imagePath = post.image.replace('http://localhost:3000/', '');
+                    const imagePath = post.image.slice(1);
                     await fs.unlink(path.join(process.cwd(), imagePath));
                 } catch (error) {
                     console.error('이미지 삭제 실패:', error);

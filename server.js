@@ -24,7 +24,7 @@ if (!fs.existsSync(profilesDir)) {
 }
 
 
-const allowedOrigins = ['http://127.0.0.1:5500','http://localhost:5500'];
+const allowedOrigins = ['http://3.39.195.183', 'http://3.39.195.183:5500', 'http://localhost:5500'];
 /* process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',')
   : ['http://127.0.0.1:5500'] */
@@ -46,13 +46,12 @@ app.use((err, req, res, next) => {
 
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your_secret_key',
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
     cookie: {
         secure: false, // HTTPS에서만 쿠키 전송 def=true
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000, // 24시간
-        sameSite: 'Lax', //def='Lax'
     }
 }))
 // 정적 파일 제공

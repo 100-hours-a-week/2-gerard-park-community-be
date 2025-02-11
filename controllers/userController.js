@@ -46,7 +46,7 @@ export const signup = async (req, res) => {
             }
 
             const hashedPassword = await bcrypt.hash(password, 10);
-            const profileImage = req.file ? `http://localhost:3000/uploads/profiles/${req.file.filename}` : null;
+            const profileImage = req.file ? `/uploads/profiles/${req.file.filename}` : null;
 
             const newUser = await UserModel.createUser({
                 email,
@@ -138,7 +138,7 @@ export const updateUserInfo = async (req, res) => {
 
             // 새 프로필 이미지가 업로드된 경우
             if (req.file) {
-                updateData.profileImage = `http://localhost:3000/uploads/profiles/${req.file.filename}`;
+                updateData.profileImage = `/uploads/profiles/${req.file.filename}`;
             }
 
             const updatedUser = await UserModel.updateUser(userId, updateData);
